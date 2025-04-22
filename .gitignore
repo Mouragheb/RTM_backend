@@ -1,0 +1,16 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+logs/
+
+# Uploaded files
+uploads/
+
+# IDE and OS files
+.DS_Store
+.vscode/
