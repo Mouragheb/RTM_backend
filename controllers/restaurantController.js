@@ -3,6 +3,8 @@ const Restaurant = require('../models/Restaurant');
 
 exports.createRestaurant = async (req, res) => {
   try {
+    console.log('req.body:', req.body);
+    console.log('req.file:', req.file);
     const { name, address } = req.body;
     let logoPath = req.file ? req.file.path : '';
 
