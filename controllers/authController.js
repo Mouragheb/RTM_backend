@@ -3,10 +3,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const sendVerificationEmail = require('../utils/sendVerificationEmail');
 
+// Register
 exports.register = async (req, res) => {
-  console.log("HIT REGISTER");
-  console.log("BODY:", req.body);
-
   try {
     const { name, email, password, role, restaurantId } = req.body;
 
@@ -27,24 +25,24 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       role,
     };
-    
+
     if (role === 'employee' && restaurantId) {
       userData.restaurant = restaurantId;
     }
-    
+
     const user = new User(userData);
 
     await user.save();
     await sendVerificationEmail(user, process.env.BASE_URL);
 
-    res.status(201).json({ message: 'User registered successfully' });
+    res.status(201).json({ message: 'User registered successfully. Please verify your email.' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Register error:', err);
+    res.status(500).json({ message: 'Server error' });
   }
-  
 };
 
+// Login
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -55,7 +53,6 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    // Block login if email is not verified
     if (!user.isVerified) {
       return res.status(401).json({ message: 'Please verify your email before logging in.' });
     }
@@ -64,7 +61,8 @@ exports.login = async (req, res) => {
       {
         userId: user._id,
         role: user.role,
-        restaurant: user.restaurant, // this part is important
+        restaurant: user.restaurant,
+        name: user.name,
       },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
@@ -80,37 +78,34 @@ exports.login = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Login error:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
-
+// Get Employees
 exports.getEmployees = async (req, res) => {
   try {
     const employees = await User.find({ role: 'employee' }).select('-password');
     res.status(200).json({ employees });
   } catch (err) {
-    console.error(err);
+    console.error('Get employees error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// Delete Employee
 exports.deleteEmployee = async (req, res) => {
   try {
-    const employee = await User.findOne({
-      _id: req.params.id,
-      role: 'employee',
-    });
-
+    const employee = await User.findOne({ _id: req.params.id, role: 'employee' });
     if (!employee) {
       return res.status(404).json({ message: 'Employee not found' });
     }
 
-    // Optional: Check if employee belongs to one of manager's restaurants
     await employee.deleteOne();
     res.status(200).json({ message: 'Employee deleted successfully' });
   } catch (err) {
-    console.error('Error deleting employee:', err);
+    console.error('Delete employee error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };

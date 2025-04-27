@@ -1,12 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { register, login } = require('../controllers/authController');
+const { register, login, getEmployees, deleteEmployee } = require('../controllers/authController');
 const { protect, restrictTo } = require('../middleware/authMiddleware');
-const { getEmployees } = require('../controllers/authController');
-const { deleteEmployee } = require('../controllers/authController');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+// Email verification route
 router.get('/verify-email', async (req, res) => {
   try {
     const { token } = req.query;
@@ -24,20 +23,17 @@ router.get('/verify-email', async (req, res) => {
 
     res.send('Email successfully verified! You can now log in.');
   } catch (err) {
-    console.error(err);
+    console.error('Email verification error:', err);
     res.status(400).send('Invalid or expired token.');
   }
 });
 
-router.delete(
-  '/employees/:id',
-  protect,
-  restrictTo('manager'),
-  deleteEmployee
-);
-
+// Auth routes
 router.post('/register', register);
 router.post('/login', login);
+
+// Employee management
 router.get('/employees', protect, restrictTo('manager'), getEmployees);
+router.delete('/employees/:id', protect, restrictTo('manager'), deleteEmployee);
 
 module.exports = router;

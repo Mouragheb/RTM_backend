@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/User'); // <-- ADD THIS to fetch full user
 
-const protect = (req, res, next) => {
+const protect = async (req, res, next) => {  // <-- make protect async
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -16,7 +17,18 @@ const protect = (req, res, next) => {
       return res.status(401).json({ message: 'Invalid token payload' });
     }
 
-    req.user = decoded;
+    const user = await User.findById(decoded.userId); // <-- FIX: Fetch full user
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    req.user = {
+      userId: user._id,
+      name: user.name,
+      role: user.role,
+      restaurant: user.restaurant,
+    };
+
     next();
   } catch (err) {
     console.error('JWT error:', err);

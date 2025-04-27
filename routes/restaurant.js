@@ -5,42 +5,26 @@ const { protect, restrictTo } = require('../middleware/authMiddleware');
 const {
   createRestaurant,
   getMyRestaurants,
-  getRestaurantById
+  getRestaurantById,
+  getRestaurantByEmployee,
+  getRestaurantByRestaurantId,
+  deleteRestaurant,
+  getTasksByRestaurant,
 } = require('../controllers/restaurantController');
 
-const { deleteRestaurant } = require('../controllers/restaurantController');
-router.delete(
-  '/:id',
-  protect,
-  restrictTo('manager'),
-  deleteRestaurant
-);
+// Manager routes
+router.post('/create', protect, restrictTo('manager'), upload.single('logo'), createRestaurant);
+router.get('/my-restaurants', protect, restrictTo('manager'), getMyRestaurants);
 
-// POST /api/restaurants/create - Create a new restaurant
-router.post(
-  '/create',
-  protect,
-  restrictTo('manager'),
-  upload.single('logo'),
-  createRestaurant
-);
+// Employee routes
+router.get('/by-id/:restaurantId', protect, getRestaurantByRestaurantId);
+router.get('/employee/:id', protect, getRestaurantByEmployee);
 
-// GET /api/restaurants/my-restaurants - Get all restaurants for the logged-in manager
-router.get(
-  '/my-restaurants',
-  protect,
-  restrictTo('manager'),
-  getMyRestaurants
-);
+// Task route
+router.get('/tasks/:restaurantId', protect, getTasksByRestaurant);
 
-// GET /api/restaurants/:id - Get one specific restaurant by ID (must belong to manager)
-router.get(
-  '/:id',
-  protect,
-  restrictTo('manager'),
-  getRestaurantById
-);
-
-
+// Manager routes (must be LAST)
+router.get('/:id', protect, restrictTo('manager'), getRestaurantById);
+router.delete('/:id', protect, restrictTo('manager'), deleteRestaurant);
 
 module.exports = router;
