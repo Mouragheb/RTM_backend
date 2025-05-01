@@ -25,6 +25,8 @@ exports.createTask = async (req, res) => {
     console.error('Error creating task:', err);
     res.status(500).json({ message: 'Server error' });
   }
+  console.log('File:', req.file);
+  console.log('Body:', req.body);
 };
 
 // Get Tasks by Restaurant
